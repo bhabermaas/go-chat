@@ -1,4 +1,5 @@
-// This is a simple chat server.
+// This is a simple chat server. It accepts connections, receive messages from clients and
+// then echos the messages to all clients
 package imserver
 
 import (
@@ -10,7 +11,7 @@ import (
 	"io"
 )
 
-// Input packet structure from client(s)
+// Input/Output packet structure for client(s)
 type Packet struct {
 	Action string
 	Userid string
@@ -27,7 +28,8 @@ type Message struct {
 
 type client chan<- Message
 
-// Instance structure for a chat client
+// Instance structure for a chat client. Just a nice place to
+// keep goodies for every client.
 type Instance struct {
 	Userid string
 	Channel client
@@ -43,32 +45,31 @@ var (
 	clients  = make(map[string]Instance)
 )
 
-//
 // Start the server and accept connections. At each accepted connection a goroutine is
 // started to handle input from its client.
 //
 func StartServer() {
 
-	log.Print("Server started")
+	log.Print("Chat server started")
 	listener, err := net.Listen("tcp", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Start broadcaster
+	// Start broadcaster background goroutine
 	go broadcaster()
 
-	// Loop around listening and accepting cloient connections.
+	// Loop around listening and accepting client connections.
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			log.Fatal(err)
 		}
+		// talk to the client from this goroutine
 		go handleConn(conn)
 	}
 }
 
-//
 // Handle a client connection. Receive JSON packets, handle actions, dispatch
 // messages to broadcaster
 //
@@ -78,6 +79,7 @@ func handleConn(conn net.Conn) {
 
 	rw :=  bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 
+	// Initialize the client instance and message channel
 	instance := Instance{}
 	instance.Connect = conn
 	instance.RW = rw
@@ -85,6 +87,7 @@ func handleConn(conn net.Conn) {
 	instance.Channel = ch
 
 	for {
+		// Read the next packet from this client
 		response, err := rw.ReadString('\n')
 		if err != nil  {
 			log.Print(err)
@@ -105,6 +108,9 @@ func handleConn(conn net.Conn) {
 
 		msg := Message{}
 		msg.Clinst = instance
+
+		// The first packet from user is LOGIN so we know the identity of the
+		// user when sending messages
 
 		if packet.Action == "LOGIN" {
 
@@ -129,21 +135,27 @@ func handleConn(conn net.Conn) {
 			continue
 		}
 
+		// Make sure we remember who this is
 		msg.Userid = userid
+
+		// When the client terminates trigger cleanup
 		if packet.Action == "QUIT" {
 			msg.Data = fmt.Sprintf("Left chat")
 			broadcast <- msg
 			leaving <- instance
 			return
 		}
+
+		// Must be a message so send it out on the broadcast channel
 		msg.Data = packet.Data
 		broadcast <- msg
 	}
+
+	// That's all folks!
 	conn.Close()
 	close(instance.Channel)
 }
 
-//
 // goroutine to broadcast messages to all chat clients. It also monitors entering and
 // leaving channels to maintain the client list
 //
@@ -153,14 +165,17 @@ func broadcaster() {
 		select {
 		case msg := <-broadcast:
 
-			// broadcast to all clients
+			// broadcast to all clients. This goes out on the channel connected to the
+			// clientWriter
 			for _, instance := range clients {
 				instance.Channel <- msg
 			}
 
+		// Somebody arrived
 		case instance := <-entering:
 			clients[instance.Userid]=instance
 
+		// Somebody has left
 		case instance := <-leaving:
 			delete(clients, instance.Userid)
 			close(instance.Channel)
@@ -168,7 +183,6 @@ func broadcaster() {
 	}
 }
 
-//
 // goroutine to write a message to a specific client. There is one routine per client.
 // This takes messages from the channel and writes them to the client.
 //
@@ -176,19 +190,20 @@ func clientWriter(rw *bufio.ReadWriter, ch <- chan Message, userid string )  {
 	log.Printf("clientWriter running.(%s) ...", userid)
 
 	for msg := range ch {
-		//msgText := fmt.Sprintf("%s -> %s", msg.Userid, msg.Data)
-		//toMsgText := fmt.Sprintf("To %s -- %s", userid, msgText)
-		//log.Print(toMsgText)
 
 	 	if userid == msg.Userid {
+	 		// Don't echo a message back to it's originator
 			continue
 		}
+
+		// Build the message packet and send
 		packet := Packet{}
 		packet.Userid = msg.Userid
 		packet.Data = msg.Data
 		packet.Action = "MSG"
 		writePacketToClient(rw, packet)
 	 }
+	 // When the channel is closed, the 'for' loop ends.
 	 log.Printf("clientWriter leaving (%s)", userid)
 }
 

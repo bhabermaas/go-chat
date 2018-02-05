@@ -16,7 +16,6 @@ var (
 	userid string
 )
 
-//
 // Connect to the chat server and login with username specified as first command argument.
 //
 func main() {
@@ -25,7 +24,7 @@ func main() {
 		log.Fatal("Userid should be first argument")
 	}
 	userid := os.Args[1]
-	// Create a channel for sending Packet structures.
+	// Create a channel for sending Packet structures between inputHandler and main
 	inputChannel := make(chan imserver.Packet)
 	connect, err := net.Dial("tcp", "localhost:8000")
 	if err != nil {
@@ -34,16 +33,16 @@ func main() {
 
 	log.Printf("Chat client has started for %s", userid)
 
+	// Create the ReadWriter for talking to the server
 	rw := bufio.NewReadWriter(bufio.NewReader(connect), bufio.NewWriter(connect))
 
-	// Make a longin packet
+	// Make a longin packet  and send to the server
 	packet := imserver.Packet{}
 	packet.Action = "LOGIN"
 	packet.Userid = userid
-
 	writePacketToServer(rw, packet)
 
-	// asynchronous receive messages
+	// start asynchronous receive messages
 	go receiveHandler(rw)
 
 	// Get message input from a goroutine provided through a channel.
@@ -63,25 +62,25 @@ func main() {
 // the proper action, userid, and text
 //
 func inputHandler(userid string, inputChannel chan imserver.Packet) {
-	log.Print("Input chat messages, Enter q to quit")
+	log.Print("Input chat messages, Enter !q to quit")
 	packet := imserver.Packet{}
 	packet.Userid = userid
 	scanner := bufio.NewScanner(os.Stdin)
 	var text string
-	for text != "q" {  // break the loop if text == "q"
+	for text != "!q" {  // break the loop if text == "!q"
 		scanner.Scan()
 		text = scanner.Text()
-		if text != "q" {
+		if text != "!q" {
 			packet.Action = "MSG"
 			packet.Data = text
 			inputChannel <- packet
 		}
 	}
+	// end of loop, send back quit to terminate
 	packet.Action = "QUIT"
 	inputChannel <- packet
 }
 
-//
 // Write a packet to chat server. The packet is converted into JSON and
 // then sent to  the server.
 //
@@ -99,7 +98,6 @@ func writePacketToServer(rw *bufio.ReadWriter, packet imserver.Packet)  {
 	}
 }
 
-//
 // Receive raw text messages from the server and echo to the console
 //
 func receiveHandler(rw *bufio.ReadWriter) {
