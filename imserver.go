@@ -1,6 +1,6 @@
 // This is a simple chat server. It accepts connections, receive messages from clients and
 // then echos the messages to all clients
-package imserver
+package main
 
 import (
 	"net"

@@ -9,13 +9,12 @@ in these programs.
 programs:
 
 	imclient.go
-	runserver.go
-	imserver/imserver.go
+	imserver.go
 
 To run the server:
 
-	go run runserver.go
+	go run imclient.go imserver.go runserver
 
 To run the client:
 
-	go run imclient.go <user-name>
+	go run imclient.go imserver.go <user-name>

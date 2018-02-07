@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"net"
 	"encoding/json"
-	"messenger/imserver"
 	"io"
 )
 
@@ -21,11 +20,17 @@ var (
 func main() {
 
 	if len(os.Args) != 2  {
-		log.Fatal("Userid should be first argument")
+		log.Fatal("Userid or runserver should be first argument")
 	}
+
+	if ( os.Args[1] == "runserver" ) {
+		StartServer()
+		return
+	}
+
 	userid := os.Args[1]
 	// Create a channel for sending Packet structures between inputHandler and main
-	inputChannel := make(chan imserver.Packet)
+	inputChannel := make(chan Packet)
 	connect, err := net.Dial("tcp", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
@@ -37,7 +42,7 @@ func main() {
 	rw := bufio.NewReadWriter(bufio.NewReader(connect), bufio.NewWriter(connect))
 
 	// Make a longin packet  and send to the server
-	packet := imserver.Packet{}
+	packet := Packet{}
 	packet.Action = "LOGIN"
 	packet.Userid = userid
 	writePacketToServer(rw, packet)
@@ -61,9 +66,9 @@ func main() {
 // Read the input lines and for each pass back a packet with
 // the proper action, userid, and text
 //
-func inputHandler(userid string, inputChannel chan imserver.Packet) {
+func inputHandler(userid string, inputChannel chan Packet) {
 	log.Print("Input chat messages, Enter !q to quit")
-	packet := imserver.Packet{}
+	packet := Packet{}
 	packet.Userid = userid
 	scanner := bufio.NewScanner(os.Stdin)
 	var text string
@@ -84,7 +89,7 @@ func inputHandler(userid string, inputChannel chan imserver.Packet) {
 // Write a packet to chat server. The packet is converted into JSON and
 // then sent to  the server.
 //
-func writePacketToServer(rw *bufio.ReadWriter, packet imserver.Packet)  {
+func writePacketToServer(rw *bufio.ReadWriter, packet Packet)  {
 
 	stream, err := json.Marshal(packet)
     if ( err != nil ) {
@@ -112,7 +117,7 @@ func receiveHandler(rw *bufio.ReadWriter) {
 			continue
 		}
 
-		packet := imserver.Packet{}
+		packet := Packet{}
 		err = json.Unmarshal([]byte(response), &packet)
 		if err != nil {
 			log.Printf("Unable to unmarshal package, err=%s", err)
