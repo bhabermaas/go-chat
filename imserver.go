@@ -76,7 +76,7 @@ func StartServer() {
 func handleConn(conn net.Conn) {
 
 	var userid string = "unknown"
-	
+
 	log.Print("Handling connection from ", conn.RemoteAddr().String())
 
 	rw :=  bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))

@@ -23,6 +23,7 @@ func main() {
 		log.Fatal("Userid or runserver should be first argument")
 	}
 
+	// Check if we want to start the server 
 	if ( os.Args[1] == "runserver" ) {
 		StartServer()
 		return
