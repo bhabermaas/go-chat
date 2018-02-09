@@ -20,10 +20,10 @@ var (
 func main() {
 
 	if len(os.Args) != 2  {
-		log.Fatal("Userid or runserver should be first argument")
+		log.Fatal("userid or runserver should be first argument")
 	}
 
-	// Check if we want to start the server 
+	// Check if we want to start the server
 	if ( os.Args[1] == "runserver" ) {
 		StartServer()
 		return
