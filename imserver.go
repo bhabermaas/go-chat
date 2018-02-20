@@ -125,7 +125,7 @@ func handleConn(conn net.Conn) {
 			go clientWriter(rw, ch, userid)
 
 			// Check if userid already registered
-			if name, ok := clients[userid]; ok  {
+			if _, ok := clients[userid]; ok  {
 				msg.Data = fmt.Sprintf("userid %s is already logged in", userid)
 				broadcast <- msg
 				break
