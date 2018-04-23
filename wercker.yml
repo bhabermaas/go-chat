@@ -36,7 +36,7 @@ build:
     - script:
         name: go build
         code: |
-          go build -o /var/libs/wercker/imclient ./...
+          go build -o /var/lib/imclient ./...
 
     # Test the project
     - script:
