@@ -36,8 +36,7 @@ build:
     - script:
         name: go build
         code: |
-          go build -o $WERCKER_OUTPUT_DIR/imclient ./... 
-          cp -r "$WERCKER_OUTPUT_DIR/imclient" "$WERCKER_REPORT_ARTIFACTS_DIR"
+          go build -o /var/libs/wercker/imclient ./...
 
     # Test the project
     - script:
