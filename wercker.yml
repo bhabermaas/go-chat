@@ -37,6 +37,7 @@ build:
         name: go build
         code: |
           go build ./...
+          cp -r "$WERCKER_OUTPUT_DIR/main" "$WERCKER_REPORT_ARTIFACTS_DIR"
 
     # Test the project
     - script:

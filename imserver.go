@@ -3,27 +3,27 @@
 package main
 
 import (
-	"net"
-	"log"
+	"bufio"
 	"encoding/json"
 	"fmt"
-	"bufio"
 	"io"
+	"log"
+	"net"
 )
 
-// Input/Output packet structure for client(s)
+// Packet : nput/Output packet structure for client(s)
 type Packet struct {
 	Action string
 	Userid string
-	Data string
+	Data   string
 }
 
-// Output channel structure for a message
+// Message : Output channel structure for a message
 // Used when sending a message to the broadcaster
 type Message struct {
 	Userid string
-	Data string
-	Clinst  Instance
+	Data   string
+	Clinst Instance
 }
 
 type client chan<- Message
@@ -31,21 +31,21 @@ type client chan<- Message
 // Instance structure for a chat client. Just a nice place to
 // keep goodies for every client.
 type Instance struct {
-	Userid string
+	Userid  string
 	Channel client
 	Connect net.Conn
-	RW *bufio.ReadWriter
+	RW      *bufio.ReadWriter
 }
 
 // Common channels and client list
 var (
 	broadcast = make(chan Message, 10)
-	entering = make(chan Instance, 10)
-	leaving  = make(chan Instance, 10)
-	clients  = make(map[string]Instance)
+	entering  = make(chan Instance, 10)
+	leaving   = make(chan Instance, 10)
+	clients   = make(map[string]Instance)
 )
 
-// Start the server and accept connections. At each accepted connection a goroutine is
+// StartServer : start server and accept connections. At each accepted connection a goroutine is
 // started to handle input from its client.
 //
 func StartServer() {
@@ -75,11 +75,11 @@ func StartServer() {
 //
 func handleConn(conn net.Conn) {
 
-	var userid string = "unknown"
+	var userid = "unknown"
 
 	log.Print("Handling connection from ", conn.RemoteAddr().String())
 
-	rw :=  bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 
 	// Initialize the client instance and message channel
 	instance := Instance{}
@@ -91,7 +91,7 @@ func handleConn(conn net.Conn) {
 	for {
 		// Read the next packet from this client
 		response, err := rw.ReadString('\n')
-		if err != nil  {
+		if err != nil {
 			log.Print(err)
 			if _, err := rw.Peek(1); err == io.EOF {
 				log.Printf("User %s has unexpectedly disconnected %s", userid, err)
@@ -125,15 +125,15 @@ func handleConn(conn net.Conn) {
 			go clientWriter(rw, ch, userid)
 
 			// Check if userid already registered
-			if _, ok := clients[userid]; ok  {
+			if _, ok := clients[userid]; ok {
 				msg.Data = fmt.Sprintf("userid %s is already logged in", userid)
 				broadcast <- msg
 				break
 			}
 
-			entering <-instance
+			entering <- instance
 			msg.Data = fmt.Sprintf("Entered chat (%s)", conn.RemoteAddr().String())
-			broadcast <-msg
+			broadcast <- msg
 			continue
 		}
 
@@ -175,7 +175,7 @@ func broadcaster() {
 
 		// Somebody arrived
 		case instance := <-entering:
-			clients[instance.Userid]=instance
+			clients[instance.Userid] = instance
 
 		// Somebody has left
 		case instance := <-leaving:
@@ -188,13 +188,13 @@ func broadcaster() {
 // goroutine to write a message to a specific client. There is one routine per client.
 // This takes messages from the channel and writes them to the client.
 //
-func clientWriter(rw *bufio.ReadWriter, ch <- chan Message, userid string )  {
+func clientWriter(rw *bufio.ReadWriter, ch <-chan Message, userid string) {
 	log.Printf("clientWriter running.(%s) ...", userid)
 
 	for msg := range ch {
 
-	 	if userid == msg.Userid {
-	 		// Don't echo a message back to it's originator
+		if userid == msg.Userid {
+			// Don't echo a message back to it's originator
 			continue
 		}
 
@@ -204,19 +204,19 @@ func clientWriter(rw *bufio.ReadWriter, ch <- chan Message, userid string )  {
 		packet.Data = msg.Data
 		packet.Action = "MSG"
 		writePacketToClient(rw, packet)
-	 }
-	 // When the channel is closed, the 'for' loop ends.
-	 log.Printf("clientWriter leaving (%s)", userid)
+	}
+	// When the channel is closed, the 'for' loop ends.
+	log.Printf("clientWriter leaving (%s)", userid)
 }
 
 //
 // Write a message packet to chat client. The message is converted into JSON and
 // then sent to the client.
 //
-func writePacketToClient(rw *bufio.ReadWriter, packet Packet)  {
+func writePacketToClient(rw *bufio.ReadWriter, packet Packet) {
 
 	stream, err := json.Marshal(packet)
-	if ( err != nil ) {
+	if err != nil {
 		log.Print("writePacketToClient marshal failed ", err)
 		return
 	}
