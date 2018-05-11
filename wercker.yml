@@ -35,8 +35,7 @@ build:
     # Build the project
     - script:
         name: go build
-        code: |
-          go build -o $WERCKER_OUTPUT_DIR/imclient ./...
+        code: |          go build -o $WERCKER_OUTPUT_DIR/imclient ./...
           cp -r "$WERCKER_OUTPUT_DIR/imclient" "$WERCKER_REPORT_ARTIFACTS_DIR"
 
     # Test the project
@@ -44,4 +43,19 @@ build:
         name: go test
         code: |
           go test ./...
+
+push-test:
+    box:
+        id: ubuntu
+        tag: latest
+
+    steps:
+    - script:
+        name: install dependencies
+        code: |
+            yum -y install git && yum clean all
+
+    - script:
+        name: SayHello
+        code: echo "Hello world"
 
