@@ -15,7 +15,7 @@ build:
         name: go build
         code: |          
           go build
-	  cp $WERCKER_SOURCE_DIR/wercker.yml $WERCKER_CACHE_DIR/wercker.yml
+          cp $WERCKER_SOURCE_DIR/wercker.yml $WERCKER_CACHE_DIR/wercker.yml
     
     # Test the project
     - script:
