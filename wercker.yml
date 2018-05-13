@@ -30,6 +30,11 @@ push-test:
 
     steps:
     - script:
+        name: restore wercker.yml
+        code: |
+            cp $WERCKER_CACHE_DIR/wercker.yml $WERCKER_ROOT/wercker.yml
+
+    - script:
         name: install dependencies
         code: |
             yum -y install git && yum clean all
