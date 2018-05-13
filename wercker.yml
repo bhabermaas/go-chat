@@ -15,13 +15,12 @@ build:
         name: go build
         code: |          
           go build -o $WERCKER_OUTPUT_DIR/imclient ./...
-          cp -r "$WERCKER_OUTPUT_DIR/imclient" "$WERCKER_REPORT_ARTIFACTS_DIR"
+    
 
     # Test the project
     - script:
         name: go test
-        code: |
-          go test ./...
+        code: |          go test ./...
 
 push-test:
     box:
