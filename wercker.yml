@@ -35,4 +35,4 @@ push-test:
 
     - script:
         name: SayHello
-        code: echo "Hello world"
+        code: echo "Hello world!!!!!!"
