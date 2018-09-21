@@ -18,6 +18,8 @@ build:
           cp $WERCKER_SOURCE_DIR/wercker.yml $WERCKER_CACHE_DIR/wercker.yml
           set -x
           ls -al
+          cp README.md $WERCKER_REPORT_ARTIFACTS_DIR/README.md
+          cp go-chat $WERCKER_REPORT_ARTIFACTS_DIR/go-char
           
     
     # Test the project
