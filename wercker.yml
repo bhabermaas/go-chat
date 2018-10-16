@@ -18,10 +18,12 @@ build:
           cp $WERCKER_SOURCE_DIR/wercker.yml $WERCKER_CACHE_DIR/wercker.yml
           set -x
           ls -al
+          export MY_ENV1=fred
+          export MY_ENV2=sally
           cp README.md $WERCKER_REPORT_ARTIFACTS_DIR/README.md
           cp go-chat $WERCKER_REPORT_ARTIFACTS_DIR/go-char
+          env
           
-    
     # Test the project
     - script:
         name: go test
