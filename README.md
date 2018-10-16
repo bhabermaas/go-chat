@@ -1,4 +1,5 @@
 GO-CHAT
+GO-CHAT-TEST
 
 This is a simple chat server with its client. It was developed to understand goroutines
 and channels. Unlike most channel examples, this implementation passes structs through
