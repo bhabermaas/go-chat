@@ -1,6 +1,6 @@
 GO-CHAT
 GO-CHAT project in Wercker/Dev
-Testing 10/26/2018 Demo
+Testing 11/28/2018 Demo
 
 This is a simple chat server with its client. It was developed to understand goroutines
 and channels. Unlike most channel examples, this implementation passes structs through
